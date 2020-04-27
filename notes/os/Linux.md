@@ -1,3 +1,13 @@
+
+* [systemctl命令](#systemctl命令)
+* [centOS安装后没有桌面的问题](#centOS安装后没有桌面的问题)
+* [centOS查看网卡信息](#centOS查看网卡信息)
+* [Linux分配IP地址](#Linux分配IP地址)
+* [centOS配置静态IP地址](#centOS配置静态IP地址)
+* [centOS安装MySQL5.7](#centOS安装MySQL5.7)
+
+
+
 # systemctl命令
 
 # centOS安装后没有桌面的问题
