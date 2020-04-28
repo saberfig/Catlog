@@ -1,14 +1,43 @@
 
-* [systemctl命令](#systemctl命令)
+* [Linux命令](#Linux命令)
+    * [systemctl命令](#systemctl命令)
+    * [ip&ifconfig命令](#ip&ifconfig命令)
+    * [dhclient命令](#dhclient命令)
+    * [grep命令](#grep命令)
+    * [防火墙相关命令](#防火墙相关命令)
+    * [端口相关命令](#端口相关命令)
 * [centOS安装后没有桌面的问题](#centOS安装后没有桌面的问题)
-* [centOS查看网卡信息](#centOS查看网卡信息)
-* [Linux分配IP地址](#Linux分配IP地址)
-* [centOS配置静态IP地址](#centOS配置静态IP地址)
+* [Linux配置静态IP地址](#Linux配置静态IP地址)
 * [centOS安装MySQL5.7](#centOS安装MySQL5.7)
 
 
 
-# systemctl命令
+# Linux命令
+## systemctl命令
+
+## ip&ifconfig命令
+```shell
+shell> ip addr
+```
+
+## dhclient命令
+```shell
+shell> dhclient
+```
+
+## grep命令
+## 防火墙相关命令
+```shell
+shell> service iptables status #查看防火墙状态   
+shell>service iptables stop|start # 即时生效，重启后复原
+shell>chkconfig iptables on|off # 永久性生效，重启后不会复原  
+```
+## 端口相关命令
+```shell
+shell> netstat -tlunp # 检查是否开启端口
+shell> firewall-cmd --zone=public --add-port=3306/tcp --permanent # 开启端口
+shell> firewall-cmd --reload
+
 
 # centOS安装后没有桌面的问题
 安装GNOME桌面
@@ -29,18 +58,16 @@ shell> systemctl set-default multi-user.target #默认进入命令行界面
 
 相关配置文件在 /etc/systemd/system/default.target中
 
-# centOS查看网卡信息
-```shell
-shell> ip addr
-```
 
-# Linux分配IP地址
+
+
+
+# Linux配置静态IP地址
+通过命令自动分配IP地址
 ```shell
 shell> dhclient
 ```
-
-# centOS配置静态IP地址
-配置网卡文件
+配置网卡文件，固定IP地址
 ```shell
 shell> vi /etc/sysconfig/network-scripts/ifcfg-ens33
 
@@ -56,6 +83,7 @@ shell> systemctl restart network.service #重启网络
 
 # centOS安装MySQL5.7
 > 摘抄自https://www.jianshu.com/p/1dab9a4d0d5f
+
 ## 配置yum源
 安装MySQL源
 ```shell
@@ -91,6 +119,8 @@ mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass!';
 或者
 mysql> set password for 'root'@'localhost'=password('MyNewPass!'); # 其他修改密码方式可看数据库部分
 ```
+> mysql5.7默认安装了密码安全检查插件(validate_password)，默认密码检查策略要求密码必须包含：大小写字母，数字和特殊符号，并且长度不能少于8位
+
 ## 添加远程登录用户
 默认只允许root账户在本地登录，如果要在其他机器上连接MySQL，必须<b>添加一个远程连接的账户</b>或者<s>修改root为允许远程连接</s>不推荐
 
