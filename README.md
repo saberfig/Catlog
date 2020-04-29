@@ -13,4 +13,6 @@
 - [数据库](notes/db-catlog.md)
     - [MySQL](notes/db/MySQL.md)
 - [计算机网络](notes/nw-catlog.md)
-    -[协议](notes/nw/协议.md)
+    - [协议](notes/nw/协议.md)
+    - [一些技术](notes/nw/一些技术.md)
+    - [路由器](notes/nw/路由器.md)
