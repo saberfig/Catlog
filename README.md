@@ -1,11 +1,14 @@
 ## 日记
 
 - [日常学习](notes/rc-catlog.md)
-- [water项目](notes/wt-catlog.md)
+- [项目日记](notes/wt-catlog.md)
+    - [2020.02 water](notes/pg/water.md)
 - [Java学习](notes/java-catlog.md)
     - [Java容器](notes/java/java-容器.md)
     - [Jaca数据类型](notes/java/java-数据类型.md)
     - [Java-Math类](notes/java/java-Math类.md)
+- [Python学习](notes/py/*)
+    - [数据库连接](notes/py/数据库连接.md)
 - [操作系统学习](notes/os-catlog.md)
     - [内存管理](notes/os/内存管理.md)
     - [虚拟机](notes/os/虚拟机.md)
