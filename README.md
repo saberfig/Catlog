@@ -19,3 +19,6 @@
     - [协议](notes/nw/协议.md)
     - [一些技术](notes/nw/一些技术.md)
     - [路由器](notes/nw/路由器.md)
+- [电脑软件](notes/myComp.md)
+- [课程](notes/)
+    -[分布式计算](notes/cl/分布式计算.md)
