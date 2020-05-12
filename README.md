@@ -19,8 +19,8 @@
             - [内存管理](notes/zhaopin/操作系统/计算机操作系统/内存管理.md)
             - [设备管理](notes/zhaopin/操作系统/计算机操作系统/设备管理.md)
     - 网络
-        - [计算机网络](notes/zhaopin/计算机网络.md)
-        - [HTTP](notes/zhaopin/HTTP.md)
+        - [计算机网络](notes/zhaopin/网络/计算机网络.md)
+        - [HTTP](notes/zhaopin/网络/HTTP.md)
     - 算法
         - [排序算法](notes/zhaopin/算法/排序算法.md)
 
