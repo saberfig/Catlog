@@ -1,5 +1,3 @@
-* [数据库-查询MySQL，返回json文件](#数据库-查询MySQL，返回json文件)
-
 # 数据库-查询MySQL，返回json文件
 ```python
 import pymysql # 下载pymysql模块 pip install PyMySQL

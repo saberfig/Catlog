@@ -1,3 +1,0 @@
-- [内存管理](os/内存管理.md)
-- [Linux](os/Linux.md)
-- [虚拟机](os/虚拟机.md)
