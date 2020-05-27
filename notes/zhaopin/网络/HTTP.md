@@ -1,0 +1,7 @@
+HTTP状态码
+Http长连接和短连接
+HTTP是无状态协议，那服务器怎么判断哪个用户是哪个呢，cookie和session
+怎么通过sessionid找到session
+https
+http3：在udp的基础上加了一个可靠传输
+http2的特点：多路复用，头部压缩，服务推送
