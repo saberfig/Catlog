@@ -1,10 +1,13 @@
 # Java容器与1.8源码分析
 
+## 目录
+
 * [一、概览](#一概览)
     * [Collection](#collection)
     * [Map](#map)
 * [二、源码分析](#二源码分析)
     * [TreeSet](#TreeSet)
+    * [TreeMap](#TreeMap)
 * [三、参考资料](#三参考资料)
 
 # 一、概览
@@ -283,6 +286,292 @@ public void clear() {
     m.clear();
 }
 ```
+[返回目录](#目录)
+
+## TreeMap
+
+* TreeMap基于红黑树（Red-Black tree）实现。该映射根据其键的自然顺序进行排序，或者根据创建映射时提供的 Comparator 进行排序，具体取决于使用的构造方法。
+* TreeMap的基本操作 containsKey、get、put 和 remove 的时间复杂度是 log(n) 。
+* TreeMap是非同步的。 它的iterator 方法返回的迭代器是fail-fastl的。0
+
+### 1. TreeSet的继承关系
+
+```java
+public class TreeMap<K,V>
+    extends AbstractMap<K,V>
+    implements NavigableMap<K,V>, Cloneable, java.io.Serializable
+```
+
+* 继承了抽象类AbstractMap，所以它是一个Map，即一个key-value集合
+* 实现了一个NavigableMap接口，提供各种导航方法
+* 实现了Cloneable接口，可以克隆
+* 实现了Serializable接口，可以序列化
+
+NavigableSet接口类
+
+```java
+public interface NavigableMap<K,V> extends SortedMap<K,V>
+```
+
+继承SortedMap接口，而SortedMap提供了一个返回比较器的方法
+
+```java
+Comparator<? super E> comparator();
+```
+
+支持自然排序和自定义排序。自然排序要求添加到Set中的元素实现Comparable接口，自定义排序要求实现一个Comparator比较器
+
+### 2.数据结构
+
+```java
+private final Comparator<? super K> comparator;//比较器
+private transient Entry<K,V> root;//Map存储的节点
+private transient int size = 0;//存储的上限
+private transient int modCount = 0;//存储的个数
+```
+
+红黑树相关
+
+```java
+private static final boolean RED   = false;
+private static final boolean BLACK = true;
+static final class Entry<K,V> implements Map.Entry<K,V>{...}
+```
+
+具体方法，学习了红黑树再研究
+
+### 3.构造函数
+
+```java
+//默认构造函数，使用java的默认比较器比较key的大小
+public TreeMap() {
+    comparator = null;
+}
+//带比较器的构造函数
+public TreeMap(Comparator<? super K> comparator) {
+    this.comparator = comparator;
+}
+//带Map的构造函数，Map会称为TreeMap的子集
+public TreeMap(Map<? extends K, ? extends V> m) {
+    comparator = null;
+    putAll(m);
+}
+//带SortedMap的构造函数，SortedMap会成为TreeMap的子集
+public TreeMap(SortedMap<K, ? extends V> m) {
+    comparator = m.comparator();
+    try {
+        buildFromSorted(m.size(), m.entrySet().iterator(), null, null);
+    } catch (java.io.IOException cannotHappen) {
+    } catch (ClassNotFoundException cannotHappen) {
+    }
+}
+```
+带有Map和SortedMap的构造函数，创建TreeMap使用的方法是不一样的。因为Map不是有序的，需要一个一个地添加，而SortedMap是有序的Map，通过buildFromSorted方法创建
+
+跟踪putAll()方法
+
+```java
+public void putAll(Map<? extends K, ? extends V> map) {
+    int mapSize = map.size();
+    if (size==0 && mapSize!=0 && map instanceof SortedMap) {
+        Comparator<?> c = ((SortedMap<?,?>)map).comparator();
+        if (c == comparator || (c != null && c.equals(comparator))) {
+            ++modCount;
+            try {
+                buildFromSorted(mapSize, map.entrySet().iterator(), 
+                                null, null);
+            } catch (java.io.IOException cannotHappen) {
+            } catch (ClassNotFoundException cannotHappen) {
+            }
+            return;
+        }
+    }
+    super.putAll(map);
+}
+```
+
+跟踪buildFromSorted方法
+
+```java
+private void buildFromSorted(int size, Iterator<?> it, java.io.ObjectInputStream str, V defaultVal) throws  java.io.IOException, ClassNotFoundException {
+    this.size = size;
+    root = buildFromSorted(0, 0, size-1, computeRedLevel(size), it, str, defaultVal);
+}
+
+// 将map中的元素逐个添加到TreeMap中，并返回map的中间元素作为根节点
+private final Entry<K,V> buildFromSorted(int level, int lo, int hi,
+                                         int redLevel,
+                                         Iterator<?> it,
+                                         java.io.ObjectInputStream str,
+                                         V defaultVal)
+    throws java.io.IOException, ClassNotFoundException {
+
+    if (hi < lo) return null;
+    // 获取中间元素
+    int mid = (lo + hi) >>> 1;
+
+    Entry<K,V> left  = null;
+    // 如果lo小于mid，则递归调用获取middle的左孩子
+    if (lo < mid)
+        left = buildFromSorted(level+1, lo, mid - 1, redLevel,
+                                it, str, defaultVal);
+
+    // extract key and/or value from iterator or stream
+    K key;
+    V value;
+    if (it != null) {
+        if (defaultVal==null) {
+            Map.Entry<?,?> entry = (Map.Entry<?,?>)it.next();
+            key = (K)entry.getKey();
+            value = (V)entry.getValue();
+        } else {
+            key = (K)it.next();
+            value = defaultVal;
+        }
+    } else { // use stream
+        key = (K) str.readObject();
+        value = (defaultVal != null ? defaultVal : (V) str.readObject());
+    }
+    //创建
+    Entry<K,V> middle =  new Entry<>(key, value, null);
+
+    // color nodes in non-full bottommost level red
+    if (level == redLevel)
+        middle.color = RED;
+
+    if (left != null) {
+        middle.left = left;
+        left.parent = middle;
+    }
+
+    if (mid < hi) {
+        Entry<K,V> right = buildFromSorted(level+1, mid+1, hi, redLevel,
+                                            it, str, defaultVal);
+        middle.right = right;
+        right.parent = middle;
+    }
+
+    return middle;
+}
+```
+
+### 4.迭代与输出
+
+迭代器：
+
+```java
+public Iterator<E> iterator() {//迭代器
+    return m.navigableKeySet().iterator();
+}
+```
+逆序输出（逆序迭代）：
+
+```java
+public Iterator<E> descendingIterator() {
+    return m.descendingKeySet().iterator();
+}
+```
+
+倒排：
+
+```java
+public NavigableSet<E> descendingSet() {
+    return new TreeSet<>(m.descendingMap());
+}
+```
+
+### 5.返回子集的方法
+
+返回的子集保留构造时的 ```边界限制``` (子集做增删时会继续判断限制)
+
+```java
+public NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive) {
+    //两元素大小之间的子集
+    return new TreeSet<>(m.subMap(fromElement, fromInclusive, toElement, toInclusive));
+}
+
+public NavigableSet<E> headSet(E toElement, boolean inclusive) {//最大值为toElement的子集
+    return new TreeSet<>(m.headMap(toElement, inclusive));
+}
+
+public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
+    return new TreeSet<>(m.tailMap(fromElement, inclusive));
+}
+
+public SortedSet<E> subSet(E fromElement, E toElement) {
+    return subSet(fromElement, true, toElement, false);
+}
+
+public SortedSet<E> headSet(E toElement) {
+    return headSet(toElement, false);
+}
+
+public SortedSet<E> tailSet(E fromElement) {
+    return tailSet(fromElement, true);
+}
+```
+
+### 6.导航方法
+
+实现 ```NavigableSet``` 中的导航方法：调用m(NavigableMap)对应的方法
+
+```java
+public E first() {
+    return m.firstKey();//返回第一个元素
+}
+
+public E last() {
+    return m.lastKey();//返回最后一个元素
+}
+
+// NavigableSet API methods
+public E lower(E e) {
+    return m.lowerKey(e);//返回小于e的第一个元素
+}
+
+public E floor(E e) {
+    return m.floorKey(e);
+}
+
+public E ceiling(E e) {
+    return m.ceilingKey(e);
+}
+
+public E higher(E e) {
+    return m.higherKey(e);
+}
+
+public E pollFirst() {//弹出第一个元素
+    Map.Entry<E,?> e = m.pollFirstEntry();
+    return (e == null) ? null : e.getKey();
+}
+
+public E pollLast() {//弹出最后一个元素
+    Map.Entry<E,?> e = m.pollLastEntry();
+    return (e == null) ? null : e.getKey();
+}
+```
+
+### 7.其他常见方法
+
+```java
+public int size() {
+    return m.size();
+}
+
+public boolean contains(Object o) {
+    return m.containsKey(o);
+    //可以看到返回的是m存储的key
+}
+
+public void clear() {
+    m.clear();
+}
+```
+
+
+
+[返回目录](#目录)
 
 # 三、参考资料
 
@@ -291,3 +580,6 @@ public void clear() {
 
 TreeSet
 * Java常用数据结构之Set之TreeSet：https://juejin.im/post/5bfb6d8ff265da610e7fc2da
+
+TreeMap
+* https://www.cnblogs.com/skywang12345/p/3310928.html
